@@ -1,0 +1,14 @@
+{
+  "name": "travnik-local",
+  "version": "0.2.1",
+  "private": true,
+  "type": "module",
+  "description": "Travnik — локальная расшифровка, библиотека и база фитотерапевта",
+  "scripts": {
+    "start": "node app/server.mjs",
+    "check": "node --check app/server.mjs && node --check app/public/app.js"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

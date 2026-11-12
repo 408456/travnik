@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Travnik — локальное приложение для расшифровки лекций, хранения документов и базы фитотерапевтических заготовок.">
+  <title>Travnik — расшифровка и база фитотерапевта</title>
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="shortcut icon" href="/link.ico" type="image/x-icon">
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    (() => {
+      const saved = localStorage.getItem('travnik-theme');
+      document.documentElement.dataset.theme = saved === 'dark' ? 'dark' : 'light';
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-icon" title="Travnik" aria-label="Travnik"><img src="/favicon.png" alt=""></div>
+      <nav class="main-nav" aria-label="Разделы приложения">
+        <button class="nav-item active" data-page="transcribe"><span aria-hidden="true">⊹</span>Расшифровка</button>
+        <button class="nav-item" data-page="library"><span aria-hidden="true">🗐</span>Библиотека</button>
+        <button class="nav-item" data-page="products"><span aria-hidden="true">✽</span>Заготовки</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Переключить тему"><span id="theme-icon">☾</span><span id="theme-label">Тёмная тема</span></button>
+        <div class="sidebar-note"><span class="privacy-dot"></span><div><strong>Работает локально</strong><small>Файлы остаются на этом компьютере</small></div></div>
+        <div class="health-row" id="health-row">Проверяю компоненты…</div>
+        <button class="diagnostics-link" data-page="diagnostics">Диагностика и журналы</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <section class="page active" id="page-transcribe">
+        <header class="page-header hero-header">
+          <div><h1>Расшифровка</h1></div>
+          <p class="header-copy">Добавьте аудио, видео или ссылку. Travnik подготовит читаемый текст и сохранит его в библиотеке.</p>
+        </header>
+        <div class="source-tabs" role="tablist" aria-label="Источник записи">
+          <button class="source-tab active" data-source="file" role="tab">Файл с компьютера</button>
+          <button class="source-tab" data-source="url" role="tab">Ссылка на видео</button>
+        </div>
+        <div class="source-panel active" id="source-file">
+          <label class="drop-zone" id="drop-zone" for="file-input">
+            <input type="file" id="file-input" accept="audio/*,video/*,.mkv,.webm,.m4a,.ogg,.flac,.wav,.aac,.wma,.mov,.avi,.ts,.mts">
+            <span class="drop-icon" aria-hidden="true">↑</span>
+            <strong id="drop-title">Перетащите аудио или видео сюда</strong>
+            <span id="drop-subtitle">или нажмите, чтобы выбрать файл</span>
+            <small>MP3, MP4, WAV, M4A, MKV и другие форматы FFmpeg</small>
+          </label>
+          <div class="upload-progress hidden" id="upload-progress"><span></span></div>
+          <button class="primary-button panel-action" id="start-file" disabled>Начать расшифровку</button>
+        </div>
+        <div class="source-panel" id="source-url">
+          <label class="field-label" for="url-input">Ссылка на открытую запись</label>
+          <div class="url-row"><input id="url-input" type="url" placeholder="https://…" autocomplete="off"><button class="primary-button" id="start-url">Загрузить и расшифровать</button></div>
+          <p class="field-hint">Закрытые записи и сайты с защитой могут потребовать входа и не загрузиться.</p>
+        </div>
+        <div id="notice" class="notice hidden" role="status"></div>
+        <section class="current-job hidden" id="current-job" aria-live="polite"></section>
+        <div class="safety-note"><span aria-hidden="true">!</span><p><strong>Проверьте специальные термины.</strong> Названия растений, латинские слова и дозировки нужно сверять с записью. Оригинальный текст Whisper сохраняется отдельно.</p></div>
+      </section>
+
+      <section class="page" id="page-library">
+        <header class="page-header">
+          <div><h1>Библиотека</h1></div>
+          <div class="header-actions"><button class="secondary-button" id="create-folder">Новая папка</button><button class="primary-button" id="add-documents">Добавить файлы</button><input class="visually-hidden" id="document-input" type="file" multiple accept=".pdf,.docx,.doc,.txt,.md"></div>
+        </header>
+        <div class="library-layout">
+          <aside class="folder-panel"><h2>Папки</h2><div class="folder-tree" id="folder-tree"></div><p class="folder-help">Перетащите документ на папку, чтобы переместить его.</p></aside>
+          <div class="library-content">
+            <label class="search-box"><span aria-hidden="true">⌕</span><input id="library-search" type="search" placeholder="Найти документ или лекцию…"></label>
+            <article class="pinned-prompt-card">
+              <div class="library-icon">AI</div>
+              <div><span class="pin-label">Закреплено</span><h3>Промпт для конспекта в DeepSeek</h3><p>Подробный шаблон с проверкой терминов, дозировок, источников и структурой конспекта.</p></div>
+              <div class="library-actions"><button class="secondary-button" id="open-deepseek-template">Открыть</button><a class="secondary-button link-button" href="/api/deepseek-template?download=1">Скачать TXT</a></div>
+            </article>
+            <div class="document-drop" id="document-drop">Перетащите сюда PDF, DOCX или TXT</div>
+            <div class="library-list" id="library-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-products">
+        <header class="page-header"><div><h1>Заготовки</h1></div><button class="primary-button" id="add-product">Добавить заготовку</button></header>
+        <p class="section-intro">Сохраняйте травы, сборы и рецепты.</p>
+        <div class="product-grid" id="product-grid"></div>
+      </section>
+
+      <section class="page" id="page-diagnostics">
+        <header class="page-header"><div><p class="eyebrow">Помощь при сбоях</p><h1>Диагностика</h1></div><button class="secondary-button" id="refresh-diagnostics">Обновить</button></header>
+        <div class="diagnostic-summary" id="diagnostic-summary"></div>
+        <div class="diagnostic-actions"><button class="primary-button" id="copy-diagnostics">Скопировать диагностику</button><span id="copy-status"></span></div>
+        <details class="log-panel" open><summary>Ошибки</summary><pre id="error-log">Загрузка…</pre></details>
+        <details class="log-panel"><summary>Все события приложения</summary><pre id="app-log">Загрузка…</pre></details>
+        <p class="log-path" id="log-path"></p>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast hidden" id="toast" role="status"></div>
+
+  <dialog class="modal" id="folder-modal"><form method="dialog" id="folder-form">
+    <div class="modal-head"><div><p class="eyebrow">Библиотека</p><h2>Новая папка</h2></div><button class="icon-button" type="button" data-close-dialog="folder-modal" aria-label="Закрыть">×</button></div>
+    <label class="form-field">Название<input id="folder-name" required maxlength="80" placeholder="Например, Исследования"></label>
+    <div class="modal-actions"><button class="secondary-button" type="button" data-close-dialog="folder-modal">Отмена</button><button class="primary-button" type="submit" id="save-folder">Создать папку</button></div>
+  </form></dialog>
+
+  <dialog class="modal product-modal" id="product-modal"><form method="dialog" id="product-form">
+    <div class="modal-head"><div><p class="eyebrow">Заготовка</p><h2 id="product-modal-title">Новая заготовка</h2></div><button class="icon-button" type="button" data-close-dialog="product-modal" aria-label="Закрыть">×</button></div>
+    <input type="hidden" id="product-id">
+    <div class="product-form-grid"><div>
+      <label class="image-picker" for="product-image"><input type="file" id="product-image" multiple accept="image/jpeg,image/png,image/webp"><span><strong>Добавить фотографии</strong><small>Можно выбрать несколько сразу</small></span></label>
+      <div class="product-image-gallery" id="product-image-gallery"></div>
+    </div><div class="form-stack">
+      <label class="form-field">Название <em>обязательно</em><input id="product-name" required maxlength="180" placeholder="Например, Иван-чай"></label>
+      <label class="form-field">Серия<input id="product-series" maxlength="100" placeholder="Например, Новелёшкин"></label>
+      <label class="form-field">Краткое описание<textarea id="product-description" rows="2"></textarea></label>
+      <label class="form-field">Состав<textarea id="product-composition" rows="3"></textarea></label>
+      <label class="form-field">Показания<textarea id="product-indications" rows="2"></textarea></label>
+      <label class="form-field">Противопоказания<textarea id="product-contraindications" rows="2"></textarea></label>
+      <label class="form-field">Применение (Способ применения)<textarea id="product-application" rows="2"></textarea></label>
+    </div></div>
+    <div class="modal-actions split"><button class="danger-button hidden" type="button" id="delete-product">Удалить</button><span></span><button class="secondary-button" type="button" data-close-dialog="product-modal">Отмена</button><button class="primary-button" type="submit" id="save-product">Сохранить</button></div>
+  </form></dialog>
+
+  <dialog class="modal preview-modal" id="preview-modal">
+    <div class="modal-head"><h2 id="preview-title">Просмотр документа</h2><button class="icon-button" id="close-preview" aria-label="Закрыть">×</button></div>
+    <iframe id="document-preview" title="Просмотр документа"></iframe>
+    <div class="modal-actions"><a class="primary-button link-button" id="preview-download" href="#">Скачать файл</a></div>
+  </dialog>
+  <dialog class="modal prompt-modal" id="prompt-modal">
+    <div class="modal-head"><div><p class="eyebrow">Закреплённый файл</p><h2>Промпт для конспекта DeepSeek</h2></div><button class="icon-button" type="button" data-close-dialog="prompt-modal" aria-label="Закрыть">×</button></div>
+    <p class="field-hint">Скопируйте шаблон и замените название и текст расшифровки. Для готовой лекции удобнее нажать её кнопку DeepSeek — Travnik подставит текст сам.</p>
+    <textarea class="prompt-text" id="deepseek-template-text" readonly></textarea>
+    <div class="modal-actions"><a class="secondary-button link-button" href="/api/deepseek-template?download=1">Скачать TXT</a><button class="secondary-button" type="button" id="copy-deepseek-template">Скопировать</button><button class="primary-button" type="button" id="launch-deepseek-template">Открыть DeepSeek</button></div>
+  </dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

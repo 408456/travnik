@@ -1,0 +1,28 @@
+data/
+tools/
+models/
+*.log
+*.part
+/примеры сайтов
+/примеры папиных баночек
+/лекции url и файлы
+
+# Зависимости Node.js (если решишь использовать npm-пакеты)
+node_modules/
+npm-debug.log*
+
+# Личные настройки конфигурации
+config.json
+
+# Системный мусор Windows
+Thumbs.db
+desktop.ini
+
+# Настройки редактора VS Code (локальные)
+.vscode/
+.idea/
+
+# Временные файлы
+tmp/
+temp/
+

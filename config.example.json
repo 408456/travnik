@@ -1,0 +1,7 @@
+{
+  "port": 3741,
+  "model": "small-q5_1",
+  "language": "ru",
+  "maxUploadGb": 20,
+  "keepPreparedAudio": false
+}
